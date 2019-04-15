@@ -1,10 +1,13 @@
 #include <algorithm>  // for random_shuffle
+#include <cassert>
 #include <cstdlib>  // for rand, srand
-#include <iostream>
 #include <fstream>  // for writing to files
-
+#include <iostream>
+#include <string> // for the getline method
 const char *FILENAME = "../data/EUKSIG_13.red";
 
+
+// Return the number of lines minus one since the provided file's last line is empty
 int GetLineCount(const char *filename) {
   int line_count = 0;
   FILE *fp = fopen(filename, "r");
@@ -39,11 +42,37 @@ void PrintArray(bool* array, int size) {
 }
 
 void CreateTrainTestSets(const char *filename) {
-  
+  std::ifstream inputfile;
+  inputfile.open(filename);
+  // TODO: create name of train and test files
+  std::string train_filename = "../data/train.red";
+  std::string test_filename = "../data/test.red";
+  // Create train and test files
+  std::ofstream trainfile;
+  trainfile.open(train_filename);
+  std::ofstream testfile;
+  testfile.open(test_filename);
+  // Compute number of observations 
+  int line_count = GetLineCount(filename);
+  assert (line_count % 3 == 0);
+  int size = line_count / 3;
+  // For every observation write in corresponding file
+  bool* mask = CreateTrainTestMask(size);
+  std::string line;
+  for (int i = 0; i < size; i++) {
+    for (int l = 0; l < 3; l++) {
+      std::getline(inputfile, line);
+      if (mask[i]) 
+        testfile << line << std::endl;
+      else 
+        trainfile << line << std::endl;
+    }
+  }
+  trainfile.close();
+  testfile.close();
+  inputfile.close();
 }
 
 int main() {
-  int size = GetLineCount(FILENAME);
-  bool* mask = CreateTrainTestMask(size);
-  PrintArray(mask, size);
+  CreateTrainTestSets("../data/EUKSIG_13.red");
 }
