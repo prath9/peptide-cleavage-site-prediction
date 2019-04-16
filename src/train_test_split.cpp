@@ -5,12 +5,10 @@
 #include <iostream>
 #include <string> // for the getline method
 
-#include "train_test_split.hpp" 
-const char *FILENAME = "../data/EUKSIG_13.red";
-
+#include "train_test_split.hpp"
 
 // Return the number of lines minus one since the provided file's last line is empty
-int GetLineCount(const char *filename) {
+int GetLineCount(std::string filename) {
   int line_count = 0;
   std::ifstream inputfile;
   inputfile.open(filename);
@@ -19,6 +17,13 @@ int GetLineCount(const char *filename) {
     line_count++;
   }
   return line_count;
+}
+
+// Return the number of sequences in the given file
+int GetSize(std::string filename) {
+  int line_count = GetLineCount(filename);
+  assert (line_count % 3 == 0);
+  return line_count / 3;
 }
 
 // Create an array of bools with 20% of true (test data) and 80% of false (training data).
@@ -42,21 +47,16 @@ void PrintArray(bool* array, int size) {
   std::cout << array[size - 1] << std::endl;
 }
 
-void CreateTrainTestSets(const char *filename) {
+void CreateTrainTestSets(std::string filename) {
   std::ifstream inputfile;
   inputfile.open(filename);
-  // Define name of train and test files
-  std::string train_filename = "../data/train.red";
-  std::string test_filename = "../data/test.red";
   // Create train and test files
   std::ofstream trainfile;
   trainfile.open(train_filename);
   std::ofstream testfile;
   testfile.open(test_filename);
   // Compute number of observations 
-  int line_count = GetLineCount(filename);
-  assert (line_count % 3 == 0);
-  int size = line_count / 3;
+  int size = GetSize(filename);
   // For every observation write in corresponding file
   bool* mask = CreateTrainTestMask(size);
   std::string line;
@@ -72,8 +72,4 @@ void CreateTrainTestSets(const char *filename) {
   trainfile.close();
   testfile.close();
   inputfile.close();
-}
-
-int main() {
-  CreateTrainTestSets("../data/EUKSIG_13.red");
 }
