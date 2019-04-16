@@ -4,19 +4,20 @@
 #include <fstream>  // for writing to files
 #include <iostream>
 #include <string> // for the getline method
+
+#include "train_test_split.hpp" 
 const char *FILENAME = "../data/EUKSIG_13.red";
 
 
 // Return the number of lines minus one since the provided file's last line is empty
 int GetLineCount(const char *filename) {
   int line_count = 0;
-  FILE *fp = fopen(filename, "r");
-
-  for (char c = getc(fp); c != EOF; c = getc(fp))
-    if (c == '\n')
-      line_count++;
-
-  fclose(fp);
+  std::ifstream inputfile;
+  inputfile.open(filename);
+  std::string line;
+  while (std::getline(inputfile, line)) {
+    line_count++;
+  }
   return line_count;
 }
 
@@ -44,7 +45,7 @@ void PrintArray(bool* array, int size) {
 void CreateTrainTestSets(const char *filename) {
   std::ifstream inputfile;
   inputfile.open(filename);
-  // TODO: create name of train and test files
+  // Define name of train and test files
   std::string train_filename = "../data/train.red";
   std::string test_filename = "../data/test.red";
   // Create train and test files

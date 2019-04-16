@@ -1,0 +1,2 @@
+Sequence* FileToSequenceArray(char* filename);
+
