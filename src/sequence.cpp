@@ -12,6 +12,10 @@ int Sequence::get_length() {
     return length;
 }
 
+int Sequence::get_cleavage_site() {
+    return cleavage_site;
+}
+
 std::string Sequence::get_aa_sequence() {
     return aa_sequence;
 }

@@ -1,17 +1,32 @@
 #include "PSSM.hpp"
-#define num_aa 20
-void Predictor::train(Sequence* training_set, int training_set_size) {
+
+void PSSM::train(Sequence* training_set, int training_set_size) {
     // Compute the array of the N(a,i)
-    double** freq_array = new double[num_aa][p+q] ();
-    double* general_freq_array = new double[num_aa];
     int total_num_aa = 0;
-    for (int sequence = 0; sequence < training_set_size; sequence++) {
-        for (int i = 0; i < training_set[sequence].get_length(); i++) {
-            general_freq_array[] += 1;
-            total_num_aa += training_set[sequence].get_length();
+
+    // First count the occurrences
+    for (int sequence_index = 0; sequence_index < training_set_size; sequence_index++) {
+        Sequence seq = training_set[sequence_index];
+        int cleavage_site = seq.get_cleavage_site();
+
+        for (int i = 1; i < seq.get_length(); i++) {  // ignore the first aa (usually methionine)
+            general_freq_array[seq.get_aa_sequence()[i] - ASCII_CONSTANT]++;
+            total_num_aa += seq.get_length();
+            if (cleavage_site - p <= i < cleavage_site + q) {
+                freq_array[seq.get_aa_sequence()[i] - ASCII_CONSTANT][i + p - cleavage_site]++;
+            }
         }
     }
-    for (int i = 0; i < num_aa; i++) {
-        general_freq_array[i]/= total_num_aa;
+
+    // Then get the corresponding frequencies
+    for (int aa = 0; aa < ALPHABET_SIZE; aa++) {
+        general_freq_array[aa] /= total_num_aa;
+        for (int i = 0; i < p + q; i++) {
+            freq_array[aa][i] /= training_set_size;
+        }
     }
+}
+
+double PSSM::WindowScore(Sequence s, int window_position) {
+    
 }
