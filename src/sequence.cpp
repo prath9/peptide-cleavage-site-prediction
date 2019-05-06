@@ -2,6 +2,8 @@
 
 #include "sequence.hpp"
 
+Sequence::Sequence() {}
+
 Sequence::Sequence(std::string _aa_sequence, int _cleavage_site, int _length) {
     length = _length;
     aa_sequence = _aa_sequence;

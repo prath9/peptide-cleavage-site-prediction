@@ -8,6 +8,7 @@ class Sequence {
     std::string aa_sequence;
 
     public:
+        Sequence();
         Sequence(std::string _aa_sequence, int _cleavage_site, int _length);
         int get_length();
         int get_cleavage_site();

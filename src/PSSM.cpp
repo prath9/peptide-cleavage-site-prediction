@@ -1,6 +1,8 @@
 #include "PSSM.hpp"
 
-void PSSM::train(Sequence* training_set, int training_set_size) {
+void PSSM::train(Sequence* training_set, int training_set_size, double pseudocount) {
+    double freq_array[ALPHABET_SIZE][p + q] = {0};
+    double general_freq_array[ALPHABET_SIZE] = {0};
     // Compute the array of the N(a,i)
     int total_num_aa = 0;
 
@@ -18,15 +20,31 @@ void PSSM::train(Sequence* training_set, int training_set_size) {
         }
     }
 
-    // Then get the corresponding frequencies
+    // Then get the corresponding frequencies, applying the pseudocount
     for (int aa = 0; aa < ALPHABET_SIZE; aa++) {
-        general_freq_array[aa] /= total_num_aa;
+        general_freq_array[aa]  = (general_freq_array[aa] + pseudocount)/(total_num_aa + pseudocount * NUM_AA); // for letters that are not aa, there is a residual frequency
         for (int i = 0; i < p + q; i++) {
-            freq_array[aa][i] /= training_set_size;
+            freq_array[aa][i] = (freq_array[aa][i] + pseudocount)/(training_set_size + pseudocount * NUM_AA);
+        }
+    }
+    
+    // Compute the PSSM
+    for (int aa = 0; aa < ALPHABET_SIZE; aa++) {
+        for (int i = 0; i < p + q; i++) {
+            pssm[aa][i] = log(freq_array[aa][i]) - log(general_freq_array[aa]);
         }
     }
 }
 
 double PSSM::WindowScore(Sequence s, int window_position) {
-    
+    double word_score = 0;
+    for (int i = 0; i < p + q; i++) {
+        word_score += pssm[s.get_aa_sequence()[window_position + i - p]][i];
+    }
+    return word_score;
+}
+
+bool WindowIsCleavage(Sequence s, int window_position, double threshold) {
+    double word_score = this.WindowScore(s, window_position);
+    return (word_score > threshold) ? true : false;
 }
