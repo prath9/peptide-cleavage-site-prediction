@@ -1,3 +1,4 @@
+#include <iostream>
 #include "PSSM.hpp"
 
 void PSSM::train(Sequence* training_set, int training_set_size, double pseudocount) {
@@ -44,7 +45,7 @@ double PSSM::WindowScore(Sequence s, int window_position) {
     return word_score;
 }
 
-bool WindowIsCleavage(Sequence s, int window_position, double threshold) {
-    double word_score = this.WindowScore(s, window_position);
+bool PSSM::WindowIsCleavage(Sequence s, int window_position, double threshold) {
+    double word_score = this->WindowScore(s, window_position);
     return (word_score > threshold) ? true : false;
 }
