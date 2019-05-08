@@ -3,16 +3,17 @@
 #include <iostream>
 #include <string>
 
+#include "PSSM.hpp"
 #include "sequence.hpp"
 #include "train_test_split.hpp"
 #include "main.hpp"
 
 
-Sequence** FileToSequenceArray(std::string filename, int size) {
+Sequence* FileToSequenceArray(std::string filename, int size) {
   std::ifstream inputfile;
   inputfile.open(filename);
   std::string line;
-  Sequence** sequence_array = new Sequence*[size];
+  Sequence* sequence_array = new Sequence[size];
   std::string aa_sequence;
   int length;  // length of each sequence
   int cleavage_site;  // position of the cleavage site of each sequence
@@ -27,7 +28,8 @@ Sequence** FileToSequenceArray(std::string filename, int size) {
       index++;
     }
     cleavage_site = index;
-    sequence_array[sequence_index] = new Sequence(aa_sequence, cleavage_site, length);
+    Sequence a(aa_sequence, cleavage_site, length);
+    sequence_array[sequence_index] = a;
     // std::cout << sequence_array[sequence_index]->get_aa_sequence() << std::endl;
   }
   return sequence_array;
@@ -42,10 +44,11 @@ int main() {
   int test_size = size / 5;
   int train_size = size - test_size;
   CreateTrainTestSets(FILENAME);
-  Sequence** train_sequences = FileToSequenceArray(train_filename, size);
-  Sequence** test_sequences = FileToSequenceArray(test_filename, size);
+  Sequence* train_sequences = FileToSequenceArray(train_filename, size);
+  Sequence* test_sequences = FileToSequenceArray(test_filename, size);
 
-  for (int i = 0; i < test_size; i++) {
-    std::cout << test_sequences[i]->get_aa_sequence() << std::endl;
-  }
+  // Test PSSM
+  PSSM pssm;
+  pssm.train(train_sequences, train_size, 1.);
+  
 }

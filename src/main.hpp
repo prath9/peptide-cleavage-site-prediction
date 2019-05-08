@@ -1,3 +1,3 @@
 #pragma once
 
-Sequence** FileToSequenceArray(std::string filename, int size);
+Sequence* FileToSequenceArray(std::string filename, int size);

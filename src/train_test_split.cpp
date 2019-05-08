@@ -7,6 +7,9 @@
 
 #include "train_test_split.hpp"
 
+std::string train_filename = "../data/train.red";
+std::string test_filename = "../data/test.red";
+
 // Return the number of lines minus one since the provided file's last line is empty
 int GetLineCount(std::string filename) {
   int line_count = 0;

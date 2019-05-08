@@ -1,7 +1,7 @@
 #pragma once
 
-std::string train_filename = "../data/train.red";
-std::string test_filename = "../data/test.red";
+extern std::string train_filename;
+extern std::string test_filename;
 
 int GetLineCount(std::string filename);
 int GetSize(std::string filename);
