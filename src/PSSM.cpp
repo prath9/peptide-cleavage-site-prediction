@@ -1,8 +1,16 @@
 #include <iostream>
 #include "PSSM.hpp"
 
+PSSM::PSSM() {
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        for (int j = 0; j < p + q; j++) {
+            pssm[i][j] = 0;
+        }
+    }
+}
+
 void PSSM::train(Sequence* training_set, int training_set_size, double pseudocount) {
-    double freq_array[ALPHABET_SIZE][p + q] = {0};
+    double freq_array[ALPHABET_SIZE][p + q] = {{0}};
     double general_freq_array[ALPHABET_SIZE] = {0};
     // Compute the array of the N(a,i)
     int total_num_aa = 0;

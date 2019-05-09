@@ -10,7 +10,9 @@
 
 class PSSM : public Predictor {
 public:
-    double pssm[ALPHABET_SIZE][p + q] = {0};
+    double pssm[ALPHABET_SIZE][p + q];
+
+    PSSM();
     void train(Sequence* training_set, int training_set_size, double pseudocount);
     double WindowScore(Sequence s, int window_position);
     bool WindowIsCleavage(Sequence s, int window_position, double threshold);
