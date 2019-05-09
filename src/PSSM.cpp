@@ -15,7 +15,7 @@ void PSSM::train(Sequence* training_set, int training_set_size, double pseudocou
         for (int i = 1; i < seq.get_length(); i++) {  // ignore the first aa (usually methionine)
             general_freq_array[seq.get_aa_sequence()[i] - ASCII_CONSTANT]++;
             total_num_aa += seq.get_length();
-            if (cleavage_site - p <= i < cleavage_site + q) {
+            if (cleavage_site - p <= i && i < cleavage_site + q) {
                 freq_array[seq.get_aa_sequence()[i] - ASCII_CONSTANT][i + p - cleavage_site]++;
             }
         }
@@ -38,9 +38,10 @@ void PSSM::train(Sequence* training_set, int training_set_size, double pseudocou
 }
 
 double PSSM::WindowScore(Sequence s, int window_position) {
+    // window_position must be greater than or equal to p
     double word_score = 0;
     for (int i = 0; i < p + q; i++) {
-        word_score += pssm[s.get_aa_sequence()[window_position + i - p]][i];
+        word_score += pssm[s.get_aa_sequence()[window_position + i - p] - ASCII_CONSTANT][i];
     }
     return word_score;
 }

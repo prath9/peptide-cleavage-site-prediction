@@ -72,6 +72,7 @@ void CreateTrainTestSets(std::string filename) {
         trainfile << line << std::endl;
     }
   }
+  delete[] mask;
   trainfile.close();
   testfile.close();
   inputfile.close();

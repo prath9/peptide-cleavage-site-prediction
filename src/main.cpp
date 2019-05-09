@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 
+#include "predictor.hpp"
 #include "PSSM.hpp"
 #include "sequence.hpp"
 #include "train_test_split.hpp"
@@ -30,11 +31,18 @@ Sequence* FileToSequenceArray(std::string filename, int size) {
     cleavage_site = index;
     Sequence a(aa_sequence, cleavage_site, length);
     sequence_array[sequence_index] = a;
-    // std::cout << sequence_array[sequence_index]->get_aa_sequence() << std::endl;
   }
   return sequence_array;
 }
 
+template <typename T, int rows, int cols> void printMatrix(T (&mat)[rows][cols]) {
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols - 1; j++) {
+      printf("%g ", mat[i][j]);
+    }
+    printf("%g\n", mat[i][cols - 1]);
+  }
+}
 
 
 
@@ -44,11 +52,19 @@ int main() {
   int test_size = size / 5;
   int train_size = size - test_size;
   CreateTrainTestSets(FILENAME);
-  Sequence* train_sequences = FileToSequenceArray(train_filename, size);
-  Sequence* test_sequences = FileToSequenceArray(test_filename, size);
+  Sequence* train_sequences = FileToSequenceArray(train_filename, train_size);
+  //Sequence* test_sequences = FileToSequenceArray(test_filename, test_size);
 
   // Test PSSM
   PSSM pssm;
   pssm.train(train_sequences, train_size, 1.);
+  printMatrix(pssm.pssm);
+
+  std::cout << train_sequences[0].get_aa_sequence() << std::endl;
+
+  double score = pssm.WindowScore(train_sequences[0], Predictor::p);
+  std::cout << score << std::endl;
   
+  delete[] train_sequences;
+  //delete[] test_sequences;
 }
