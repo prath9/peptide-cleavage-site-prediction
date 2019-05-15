@@ -34,6 +34,29 @@ Sequence* FileToSequenceArray(std::string filename, int size) {
   return sequence_array;
 }
 
+// Remove sequences such that cleavage_site <= p since we ignore the first aa
+void RemoveInvalidSequences(Sequence*& sequence_array, int& size) {
+  // count number of valid sequences: will be the size of the new sequence_array
+  int number_valid_sequences = 0;
+  for (int sequence_index = 0; sequence_index < size; sequence_index++) {
+    if (sequence_array[sequence_index].get_cleavage_site() > Predictor::p) { // sequence is valid: don't ignore
+      number_valid_sequences++;
+    }
+  }
+  // create new sequence array
+  Sequence* new_sequence_array = new Sequence[number_valid_sequences];
+  int new_sequence_index = 0;
+  for (int sequence_index = 0; sequence_index < size; sequence_index++) {
+    if (sequence_array[sequence_index].get_cleavage_site() > Predictor::p) {
+      new_sequence_array[new_sequence_index] = sequence_array[sequence_index];
+      new_sequence_index++;
+    }
+  }
+  size = number_valid_sequences;
+  sequence_array = new_sequence_array;
+}
+
+
 template <typename T, int rows, int cols> void printMatrix(T (&mat)[rows][cols]) {
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols - 1; j++) {
@@ -52,7 +75,13 @@ int main() {
   int train_size = size - test_size;
   CreateTrainTestSets(FILENAME);
   Sequence* train_sequences = FileToSequenceArray(train_filename, train_size);
-  //Sequence* test_sequences = FileToSequenceArray(test_filename, test_size);
+  std::cout << "Initial number of training sequences: " << train_size << std::endl;
+  RemoveInvalidSequences(train_sequences, train_size);
+  std::cout << "Number of training sequences after removing invalid data: " << train_size << std::endl;
+  // Sequence* test_sequences = FileToSequenceArray(test_filename, test_size);
+  // std::cout << "Initial number of test sequences: " << test_size << std::endl;
+  // RemoveInvalidSequences(test_sequences, test_size);
+  // std::cout << "Number of test sequences after removing invalid data: " << test_size << std::endl;
 
   // Test PSSM
   PSSM pssm;
