@@ -20,10 +20,9 @@ Sequence* FileToSequenceArray(std::string filename, int size) {
   int cleavage_site;  // position of the cleavage site of each sequence
   for (int sequence_index = 0; sequence_index < size; sequence_index++) {
     std::getline(inputfile, line); // first line: do nothing
-    std::getline(inputfile, line); // second line: retrieve aa_sequence
-    aa_sequence = line;
-    std::getline(inputfile, line); // third line: compute cleavage site and length
+    std::getline(inputfile, aa_sequence); // second line: retrieve aa_sequence
     length = aa_sequence.length();  // number of bytes (and characters, here) in aa_sequence
+    std::getline(inputfile, line); // third line: compute cleavage site
     int index = 0;
     while (line[index] != 'C') {
       index++;
@@ -60,10 +59,14 @@ int main() {
   pssm.train(train_sequences, train_size, 1.);
   printMatrix(pssm.pssm);
 
-  std::cout << train_sequences[0].get_aa_sequence() << std::endl;
-
-  double score = pssm.WindowScore(train_sequences[0], Predictor::p);
-  std::cout << score << std::endl;
+  Sequence seq = train_sequences[1];
+  int length = seq.get_length();
+  std::cout << seq.get_aa_sequence() << std::endl;
+  for (int potential_cleavage_site = Predictor::p; potential_cleavage_site <= length - Predictor::q; potential_cleavage_site++) {
+    double score = pssm.WindowScore(seq, potential_cleavage_site);
+    std::cout << "PCS: " << potential_cleavage_site << " Score: " << score << std::endl;
+  }
+  std::cout << "Real CS: " << seq.get_cleavage_site() << std::endl;
   
   delete[] train_sequences;
   //delete[] test_sequences;
