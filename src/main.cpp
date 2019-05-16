@@ -78,21 +78,32 @@ int main() {
   std::cout << "Initial number of training sequences: " << train_size << std::endl;
   RemoveInvalidSequences(train_sequences, train_size);
   std::cout << "Number of training sequences after removing invalid data: " << train_size << std::endl;
-  // Sequence* test_sequences = FileToSequenceArray(test_filename, test_size);
-  // std::cout << "Initial number of test sequences: " << test_size << std::endl;
-  // RemoveInvalidSequences(test_sequences, test_size);
-  // std::cout << "Number of test sequences after removing invalid data: " << test_size << std::endl;
+  Sequence* test_sequences = FileToSequenceArray(test_filename, test_size);
+  std::cout << "Initial number of test sequences: " << test_size << std::endl;
+  RemoveInvalidSequences(test_sequences, test_size);
+  std::cout << "Number of test sequences after removing invalid data: " << test_size << std::endl;
 
   // Test PSSM
   PSSM pssm;
   pssm.train(train_sequences, train_size, 1.);
-  printMatrix(pssm.pssm);
+  // printMatrix(pssm.pssm);
+
+  std::vector<int> candidates_0 = pssm.FindCleavagesThreshold(train_sequences[1], 1.);
+  std::cout << "Candidate cleavage sites for a sequence in the training set:" << std::endl;
+  for (size_t i = 0; i < candidates_0.size(); i++)
+  {
+    std::cout << candidates_0[i] << std::endl;
+  }
 
   Sequence seq = train_sequences[1];
-  std::cout << seq.get_aa_sequence() << std::endl;
-  std::cout << "Predicted CS: " << pssm.FindCleavageMax(seq) << std::endl;
-  std::cout << "Real CS: " << seq.get_cleavage_site() << std::endl;
+  std::cout << "Predicted CS for a sequence in the training set: " << pssm.FindCleavageMax(seq) << std::endl;
+  std::cout << "Real CS for a sequence in the training set: " << seq.get_cleavage_site() << std::endl;
+
+
   
+  std::cout << "Classification accuracy on training data: " << pssm.SequenceAccuracy(train_sequences, train_size) << std::endl;
+  std::cout << "Classification accuracy on test data: " << pssm.SequenceAccuracy(test_sequences, test_size) << std::endl;
+
   delete[] train_sequences;
-  //delete[] test_sequences;
+  delete[] test_sequences;
 }
