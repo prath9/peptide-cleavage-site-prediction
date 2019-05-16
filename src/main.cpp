@@ -89,12 +89,8 @@ int main() {
   printMatrix(pssm.pssm);
 
   Sequence seq = train_sequences[1];
-  int length = seq.get_length();
   std::cout << seq.get_aa_sequence() << std::endl;
-  for (int potential_cleavage_site = Predictor::p; potential_cleavage_site <= length - Predictor::q; potential_cleavage_site++) {
-    double score = pssm.WindowScore(seq, potential_cleavage_site);
-    std::cout << "PCS: " << potential_cleavage_site << " Score: " << score << std::endl;
-  }
+  std::cout << "Predicted CS: " << pssm.FindCleavageMax(seq) << std::endl;
   std::cout << "Real CS: " << seq.get_cleavage_site() << std::endl;
   
   delete[] train_sequences;

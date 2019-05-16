@@ -14,6 +14,8 @@ public:
 
     PSSM();
     void train(Sequence* training_set, int training_set_size, double pseudocount);
-    double WindowScore(Sequence s, int window_position);
-    int FindCleavage(Sequence s);
+    double WindowScore(Sequence& s, int window_position);
+    int FindCleavageMax(Sequence& s);
+    std::vector<int> FindCleavagesThreshold(Sequence& s, double threshold);
+    double SequenceAccuracy(Sequence* test_set, int test_set_size);
 };
