@@ -1,3 +1,4 @@
 .vscode
 data/test.red
 data/train.red
+data/train_svm.txt

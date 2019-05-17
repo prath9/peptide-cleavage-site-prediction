@@ -21,7 +21,7 @@ int Predictor::FindCleavageMax(Sequence& s) {
 std::vector<int> Predictor::FindCleavagesThreshold(Sequence& s, double threshold) {
     std::vector<int> v;
     int length = s.get_length();
-    for (int potential_cs = p; potential_cs <= length - q; potential_cs++) {
+    for (int potential_cs = p + 1; potential_cs <= length - q; potential_cs++) { // p + 1 because we ignore the first aa
         if (WindowScore(s, potential_cs) >= threshold)
             v.push_back(potential_cs);
     }
