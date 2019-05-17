@@ -56,13 +56,13 @@ void RemoveInvalidSequences(Sequence*& sequence_array, int& size) {
   sequence_array = new_sequence_array;
 }
 
-void SequenceSVMTranslate(Sequence*& sequence_array, int size) {
+void SequenceSVMTranslate(Sequence*& sequence_array, int size, std::string filename) {
   // Convert sequence_array into a series of vectors of size 26 * window_size,
   // for each window in each sequence, and write the output into ../data/train_svm.txt,
   // in a format readable by libsvm.
 
   std::ofstream output_file;
-  output_file.open("../data/train_svm.txt");
+  output_file.open(filename);
   for (int sequence_index = 0; sequence_index < size; sequence_index++)
   {
     Sequence seq = sequence_array[sequence_index];
@@ -138,8 +138,8 @@ int main() {
 
   //TestPSSM(train_sequences, train_size, test_sequences, test_size);
 
-  SequenceSVMTranslate(train_sequences, train_size);
-
+  SequenceSVMTranslate(train_sequences, train_size, "../data/train_svm.txt");
+  SequenceSVMTranslate(test_sequences, test_size, "../data/test_svm.txt");
   delete[] train_sequences;
   delete[] test_sequences;
 }
