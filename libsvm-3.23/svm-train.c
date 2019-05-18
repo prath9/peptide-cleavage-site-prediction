@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
+#include "eval.h"
 #include "svm.h"
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 
@@ -98,7 +99,8 @@ int main(int argc, char **argv)
 
 	if(cross_validation)
 	{
-		do_cross_validation();
+		double cv =  binary_class_cross_validation(&prob, &param, nr_fold);
+		printf("Cross Validation = %g%%\n",100.0*cv);
 	}
 	else
 	{

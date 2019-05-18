@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include "eval.h"
 #include "svm.h"
 
 int print_null(const char *s,...) {return 0;}
@@ -229,7 +230,7 @@ int main(int argc, char **argv)
 			info("Model supports probability estimates, but disabled in prediction.\n");
 	}
 
-	predict(input,output);
+	binary_class_predict(input, output);
 	svm_free_and_destroy_model(&model);
 	free(x);
 	free(line);
