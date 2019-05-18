@@ -1,5 +1,6 @@
 .vscode
 data/test.red
 data/train.red
-data/train_svm.txt
-data/test_svm.txt
+data/*.txt
+data/*.model
+data/*.out
