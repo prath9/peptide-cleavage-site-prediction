@@ -9,7 +9,6 @@
 #include "train_test_split.hpp"
 #include "main.hpp"
 
-
 Sequence* FileToSequenceArray(std::string filename, int size) {
   std::ifstream inputfile;
   inputfile.open(filename);
@@ -56,26 +55,57 @@ void RemoveInvalidSequences(Sequence*& sequence_array, int& size) {
   sequence_array = new_sequence_array;
 }
 
-void SequenceSVMTranslate(Sequence*& sequence_array, int size, std::string filename) {
-  // Convert sequence_array into a series of vectors of size 26 * window_size,
-  // for each window in each sequence, and write the output into ../data/train_svm.txt,
-  // in a format readable by libsvm.
 
-  std::ofstream output_file;
-  output_file.open(filename);
+
+std::vector<std::string> SequenceToWindows(Sequence*& sequence_array, int size) {
+  // Write all the windows corresponding to sequence_array in the result vector
+  std::vector<std::string> window_vector;
   for (int sequence_index = 0; sequence_index < size; sequence_index++)
   {
     Sequence seq = sequence_array[sequence_index];
     std::string aa_sequence = seq.get_aa_sequence();
     int length = seq.get_length();
     for (int potential_cs = p + 1; potential_cs < length - q; potential_cs++) // p + 1 because we ignore the first aa
-    {
-      int feature_index = 1;
-      std::string label = (potential_cs == seq.get_cleavage_site()) ? "+1" : "-1";
-      output_file << label;
-      for (int aa_index = 0; aa_index < p + q; aa_index++)
+    { 
+      std::string window_string = aa_sequence.substr(potential_cs - p, p + q);     
+      window_vector.push_back(window_string);
+    }
+  }
+  return window_vector;
+}
+
+std::vector<std::string> SequenceToLabels(Sequence*& sequence_array, int size) {
+  // Write all the labels corresponding to sequence_array in the result vector
+  std::vector<std::string> label_vector;
+  for (int sequence_index = 0; sequence_index < size; sequence_index++)
+  {
+    Sequence seq = sequence_array[sequence_index];
+    int length = seq.get_length();
+    int cleavage_site = seq.get_cleavage_site();
+    for (int potential_cs = p + 1; potential_cs < length - q; potential_cs++) // p + 1 because we ignore the first aa
+    { 
+      std::string label = (potential_cs == cleavage_site) ? "+1" : "-1" ;     
+      label_vector.push_back(label);
+    }
+  }
+  return label_vector;
+}
+
+void SequenceSVMTranslate(std::vector<std::string> window_vector, std::vector<std::string> label_vector, std::string filename) {
+  // Convert sequence_array into a series of vectors of size 26 * window_size,
+  // for each window in each sequence, and write the output into filename,
+  // in a format readable by libsvm.
+
+  std::ofstream output_file;
+  output_file.open(filename);
+  int num_windows = window_vector.size();
+  for (int window_index = 0; window_index < num_windows; window_index++) {
+    int feature_index = 1;
+    output_file << label_vector[window_index];
+    std::string window_string = window_vector[window_index];
+    for (int aa_index = 0; aa_index < p + q; aa_index++)
       {
-        char aa = aa_sequence[potential_cs - p + aa_index];
+        char aa = window_string[aa_index];
         int aa_letter_index = aa - ASCII_CONSTANT;
         for (int letter_index = 0; letter_index < 26; letter_index++)
         {
@@ -84,10 +114,42 @@ void SequenceSVMTranslate(Sequence*& sequence_array, int size, std::string filen
         }
       }
       output_file << std::endl;
-    }
   }
   output_file.close();
 }
+
+
+void SequenceSVMTranslateSimilarityMatrix(std::vector<std::string> window_vector, std::vector<std::string> label_vector, std::vector<std::string> train_window_vector, int similarity_matrix[26][26], std::string filename) {
+// write the value of the similarity (defined in a specified AA-wise similarity matrix) between 
+// the windows in window_vector and those in train_window_vector (training instances) into filename
+// such that the format of filename is readable by libsvm
+  std::ofstream output_file;
+  output_file.open(filename);
+  int num_windows = window_vector.size();
+  int train_num_windows = train_window_vector.size();
+  for (int window_index = 0; window_index < num_windows; window_index++)
+  {
+    output_file << label_vector[window_index] << " 0:" << window_index + 1;
+    std::string window_string = window_vector[window_index];
+    for (int train_window_index = 0; train_window_index < train_num_windows; train_window_index++)
+    {
+      std::string train_window_string = train_window_vector[train_window_index];
+      // use similarity_matrix to compute the similarity between windows
+      int similarity = 0;
+      for (int aa_index = 0; aa_index < p + q; aa_index++) {
+        char aa = window_string[aa_index];
+        char train_aa = window_string[aa_index];
+        int aa_letter_index = aa - ASCII_CONSTANT;
+        int train_aa_letter_index = train_aa - ASCII_CONSTANT;
+        similarity += similarity_matrix[aa_letter_index][train_aa_letter_index];
+      }
+      output_file << " " << train_window_index + 1 << ":" << similarity;
+    }
+    output_file << std::endl;
+  }
+  output_file.close();
+}
+
 
 
 template <typename T, int rows, int cols> void printMatrix(T (&mat)[rows][cols]) {
@@ -137,9 +199,13 @@ int main() {
   std::cout << "Number of test sequences after removing invalid data: " << test_size << std::endl;
 
   //TestPSSM(train_sequences, train_size, test_sequences, test_size);
-
-  SequenceSVMTranslate(train_sequences, train_size, "../data/train_svm.txt");
-  SequenceSVMTranslate(test_sequences, test_size, "../data/test_svm.txt");
+  std::vector<std::string> train_window_vector = SequenceToWindows(train_sequences, train_size);
+  std::vector<std::string> test_window_vector = SequenceToWindows(test_sequences, test_size);
+  std::vector<std::string> train_label_vector = SequenceToLabels(train_sequences, train_size);
+  std::vector<std::string> test_label_vector = SequenceToLabels(test_sequences, test_size);
+  SequenceSVMTranslate(train_window_vector, train_label_vector, "../data/train_svm.txt");
+  SequenceSVMTranslate(test_window_vector, test_label_vector, "../data/test_svm.txt");
+  
   delete[] train_sequences;
   delete[] test_sequences;
 }
