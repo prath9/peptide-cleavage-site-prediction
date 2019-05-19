@@ -119,7 +119,7 @@ void SequenceSVMTranslate(std::vector<std::string> window_vector, std::vector<st
 }
 
 
-void SequenceSVMTranslateSimilarityMatrix(std::vector<std::string> window_vector, std::vector<std::string> label_vector, std::vector<std::string> train_window_vector, int similarity_matrix[26][26], std::string filename) {
+void SequenceSVMTranslateSimilarityMatrix(std::vector<std::string> window_vector, std::vector<std::string> label_vector, std::vector<std::string> train_window_vector, std::vector<std::vector<int> > similarity_matrix, std::string filename) {
 // write the value of the similarity (defined in a specified AA-wise similarity matrix) between 
 // the windows in window_vector and those in train_window_vector (training instances) into filename
 // such that the format of filename is readable by libsvm
@@ -138,7 +138,7 @@ void SequenceSVMTranslateSimilarityMatrix(std::vector<std::string> window_vector
       int similarity = 0;
       for (int aa_index = 0; aa_index < p + q; aa_index++) {
         char aa = window_string[aa_index];
-        char train_aa = window_string[aa_index];
+        char train_aa = train_window_string[aa_index];
         int aa_letter_index = aa - ASCII_CONSTANT;
         int train_aa_letter_index = train_aa - ASCII_CONSTANT;
         similarity += similarity_matrix[aa_letter_index][train_aa_letter_index];
@@ -151,6 +151,37 @@ void SequenceSVMTranslateSimilarityMatrix(std::vector<std::string> window_vector
 }
 
 
+std::vector<std::vector<int> > FileToMatrix(std::string filename) {
+  std::vector<std::vector<int> > mat;
+  std::ifstream inputfile;
+  inputfile.open(filename);
+  std::string line;
+  while (std::getline(inputfile, line)) {
+    int length = line.length();
+    std::vector<int> mat_line; 
+    bool minus = false;
+    for (int i = 0; i < length; i++)
+    {
+      if (line[i] != ' ') {
+        if (line[i] == '-') {
+          minus = true;
+        }
+        else {
+          if (minus == true) {
+            mat_line.push_back(-(line[i] - NUMBER_ASCII_CONSTANT));
+            minus = false;
+          }
+          else {
+            mat_line.push_back(line[i] - NUMBER_ASCII_CONSTANT); 
+          }
+        }
+      }
+    }
+    mat.push_back(mat_line);
+  }
+  return mat;
+}
+
 
 template <typename T, int rows, int cols> void printMatrix(T (&mat)[rows][cols]) {
   for (int i = 0; i < rows; i++) {
@@ -158,6 +189,29 @@ template <typename T, int rows, int cols> void printMatrix(T (&mat)[rows][cols])
       printf("%g ", mat[i][j]);
     }
     printf("%g\n", mat[i][cols - 1]);
+  }
+}
+
+
+void printMatrixSTL(std::vector<std::vector<int> > mat) {
+  int num_lines = mat.size();
+  int num_columns = mat[0].size();
+  for (int i = 0; i < num_lines; i++) {
+    for (int j = 0; j < num_columns - 1; j++)
+    {
+      if (mat[i][j] >= 0) {
+        std::cout << " " << mat[i][j] << " ";
+      }
+      else {
+        std::cout << mat[i][j] << " ";
+      }
+    }
+    if (mat[i][num_columns - 1] >= 0) {
+      std::cout << " " << mat[i][num_columns - 1] << std::endl;
+    }
+    else {
+      std::cout << mat[i][num_columns - 1] << std::endl;
+    }
   }
 }
 
@@ -184,7 +238,7 @@ void TestPSSM(Sequence*& train_sequences, int train_size, Sequence*& test_sequen
 
 
 int main() {
-  std::string FILENAME = "../data/EUKSIG_13.red";
+  std::string FILENAME = "../data/EUKSIG_13_small.red";
   int size = GetSize(FILENAME);
   int test_size = size / 5;
   int train_size = size - test_size;
@@ -197,15 +251,39 @@ int main() {
   std::cout << "Initial number of test sequences: " << test_size << std::endl;
   RemoveInvalidSequences(test_sequences, test_size);
   std::cout << "Number of test sequences after removing invalid data: " << test_size << std::endl;
+  std::cout << std::endl;
 
   //TestPSSM(train_sequences, train_size, test_sequences, test_size);
   std::vector<std::string> train_window_vector = SequenceToWindows(train_sequences, train_size);
   std::vector<std::string> test_window_vector = SequenceToWindows(test_sequences, test_size);
   std::vector<std::string> train_label_vector = SequenceToLabels(train_sequences, train_size);
   std::vector<std::string> test_label_vector = SequenceToLabels(test_sequences, test_size);
-  SequenceSVMTranslate(train_window_vector, train_label_vector, "../data/train_svm.txt");
-  SequenceSVMTranslate(test_window_vector, test_label_vector, "../data/test_svm.txt");
-  
+
+  // Build libsvm-compatible datasets for default kernels
+  //std::cout << "Building ../data/train_svm.txt ... ";
+  //SequenceSVMTranslate(train_window_vector, train_label_vector, "../data/train_svm.txt");
+  //std::cout << "OK" << std::endl;
+  //std::cout << "Building ../data/test_svm.txt ... ";
+  //SequenceSVMTranslate(test_window_vector, test_label_vector, "../data/test_svm.txt");
+  //std::cout << "OK" << std::endl;
+
+  // test matrix builder
+  std::cout << "Identity matrix:" << std::endl;
+  std::vector<std::vector<int> > identity = FileToMatrix("../data/matrices/identity.txt"); 
+  printMatrixSTL(identity);
+  std::cout << "BLOSUM62 matrix:" << std::endl;
+  std::vector<std::vector<int> > blosum62 = FileToMatrix("../data/matrices/BLOSUM62.txt"); 
+  printMatrixSTL(blosum62);
+
+  // Build libsvm-compatible datasets for precomputed kernels
+  std::cout << "Building ../data/train_svm_identity.txt ... " << std::endl;
+  SequenceSVMTranslateSimilarityMatrix(train_window_vector, train_label_vector, train_window_vector, identity, "../data/train_svm_identity.txt");
+  std::cout << "OK" << std::endl;
+  std::cout << "Building ../data/train_svm_blosum62.txt ... " << std::endl;
+  SequenceSVMTranslateSimilarityMatrix(train_window_vector, train_label_vector, train_window_vector, identity, "../data/train_svm_blosum62.txt");
+  std::cout << "OK" << std::endl;
+
+  // delete sequence arrays
   delete[] train_sequences;
   delete[] test_sequences;
 }
