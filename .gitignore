@@ -1,6 +1,10 @@
 .vscode
-data/test.red
-data/train.red
-data/*.txt
-data/*.model
-data/*.out
+libsvm-3.23/
+
+# Huge files, up to several GB:
+data/test/
+data/train/
+
+# Not so large but a lot of files are there, depending on the kernels and parameters used
+data/models/
+data/outputs/
