@@ -8,3 +8,7 @@ data/train/
 # Not so large but a lot of files are there, depending on the kernels and parameters used
 data/models/
 data/outputs/
+
+# Should be re-built
+data/datasets/**/test.red
+data/datasets/**/train.red
