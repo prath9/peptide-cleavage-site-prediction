@@ -215,21 +215,25 @@ void printMatrixSTL(std::vector<std::vector<int> > mat) {
   }
 }
 
-void TestPSSM(Sequence*& train_sequences, int train_size, Sequence*& test_sequences, int test_size) {
+void TestPSSM(Sequence*& train_sequences, int train_size, Sequence*& test_sequences, int test_size, double threshold) {
   PSSM pssm;
   pssm.train(train_sequences, train_size, 1.);
-  // printMatrix(pssm.pssm);
-
-  std::vector<int> candidates_0 = pssm.FindCleavagesThreshold(train_sequences[1], 1.);
-  std::cout << "Candidate cleavage sites for a sequence in the training set:" << std::endl;
-  for (size_t i = 0; i < candidates_0.size(); i++)
+  for (int sequence_index = 0; sequence_index < test_size; sequence_index++)
   {
-    std::cout << candidates_0[i] << std::endl;
+    Sequence seq = test_sequences[sequence_index];
+    std::vector<int> candidates = pssm.FindCleavagesThreshold(seq, threshold);
+    std::cout << "Candidate cleavage sites for sequence " << sequence_index << ": ";
+    if (candidates.size() != 0) {
+      for (size_t i = 0; i < candidates.size() - 1; i++)
+      {
+        std::cout << candidates[i] << ", ";
+      }
+    }
+    std::cout << candidates[candidates.size() - 1] << std::endl;
+    std::cout << "Predicted cleavage site for sequence " << sequence_index << ": " << pssm.FindCleavageMax(seq) << std::endl;
+    std::cout << "Real cleavage site: " << seq.get_cleavage_site() << std::endl;
+    std::cout << std::endl;
   }
-
-  Sequence seq = train_sequences[1];
-  std::cout << "Predicted CS for a sequence in the training set: " << pssm.FindCleavageMax(seq) << std::endl;
-  std::cout << "Real CS for a sequence in the training set: " << seq.get_cleavage_site() << std::endl;
 
   std::cout << "Classification accuracy on training data: " << pssm.SequenceAccuracy(train_sequences, train_size) << std::endl;
   std::cout << "Classification accuracy on test data: " << pssm.SequenceAccuracy(test_sequences, test_size) << std::endl;
@@ -238,11 +242,14 @@ void TestPSSM(Sequence*& train_sequences, int train_size, Sequence*& test_sequen
 
 
 int main() {
-  std::string FILENAME = "../data/EUKSIG_13_small.red";
+  std::string dataset = "GRAM-SIG_13";  // in {"EUKSIG_13_small", "GRAM-SIG_13", "GRAM+SIG_13"}
+  std::string FILENAME = "../data/datasets/" + dataset + "/" + dataset + ".red";
+  std::string train_filename = "../data/datasets/" + dataset + "/train.red";
+  std::string test_filename = "../data/datasets/" + dataset + "/test.red";
   int size = GetSize(FILENAME);
   int test_size = size / 5;
   int train_size = size - test_size;
-  CreateTrainTestSets(FILENAME);
+  CreateTrainTestSets(FILENAME, train_filename, test_filename);
   Sequence* train_sequences = FileToSequenceArray(train_filename, train_size);
   std::cout << "Initial number of training sequences: " << train_size << std::endl;
   RemoveInvalidSequences(train_sequences, train_size);
@@ -253,19 +260,23 @@ int main() {
   std::cout << "Number of test sequences after removing invalid data: " << test_size << std::endl;
   std::cout << std::endl;
 
-  //TestPSSM(train_sequences, train_size, test_sequences, test_size);
+  // TestPSSM(train_sequences, train_size, test_sequences, test_size, 1);
   std::vector<std::string> train_window_vector = SequenceToWindows(train_sequences, train_size);
   std::vector<std::string> test_window_vector = SequenceToWindows(test_sequences, test_size);
   std::vector<std::string> train_label_vector = SequenceToLabels(train_sequences, train_size);
   std::vector<std::string> test_label_vector = SequenceToLabels(test_sequences, test_size);
 
+  std::string filename;  // will take different values below, as we build the files
+
   // Build libsvm-compatible datasets for default kernels
-  //std::cout << "Building ../data/train_svm.txt ... ";
-  //SequenceSVMTranslate(train_window_vector, train_label_vector, "../data/train_svm.txt");
-  //std::cout << "OK" << std::endl;
-  //std::cout << "Building ../data/test_svm.txt ... ";
-  //SequenceSVMTranslate(test_window_vector, test_label_vector, "../data/test_svm.txt");
-  //std::cout << "OK" << std::endl;
+  filename = "../data/train/" + dataset + "/default_kernels.txt";
+  std::cout << "Building " << filename << " ... " << std::endl;
+  SequenceSVMTranslate(train_window_vector, train_label_vector, filename);
+  std::cout << "OK" << std::endl;
+  filename = "../data/test/" + dataset + "/default_kernels.txt";
+  std::cout << "Building " << filename << " ... " << std::endl;
+  SequenceSVMTranslate(test_window_vector, test_label_vector, filename);
+  std::cout << "OK" << std::endl;
 
   // test matrix builder
   std::cout << "Identity matrix:" << std::endl;
@@ -276,11 +287,22 @@ int main() {
   printMatrixSTL(blosum62);
 
   // Build libsvm-compatible datasets for precomputed kernels
-  std::cout << "Building ../data/train_svm_identity.txt ... " << std::endl;
-  SequenceSVMTranslateSimilarityMatrix(train_window_vector, train_label_vector, train_window_vector, identity, "../data/train_svm_identity.txt");
+  filename = "../data/train/" + dataset + "/identity.txt";
+  std::cout << "Building " << filename << " ... " << std::endl;
+  SequenceSVMTranslateSimilarityMatrix(train_window_vector, train_label_vector, train_window_vector, identity, filename);
   std::cout << "OK" << std::endl;
-  std::cout << "Building ../data/train_svm_blosum62.txt ... " << std::endl;
-  SequenceSVMTranslateSimilarityMatrix(train_window_vector, train_label_vector, train_window_vector, identity, "../data/train_svm_blosum62.txt");
+  filename = "../data/train/" + dataset + "/blosum62.txt";
+  std::cout << "Building " << filename << " ... " << std::endl;
+  SequenceSVMTranslateSimilarityMatrix(train_window_vector, train_label_vector, train_window_vector, blosum62, filename);
+  std::cout << "OK" << std::endl;
+
+  filename = "../data/test/" + dataset + "/identity.txt";
+  std::cout << "Building " << filename << " ... " << std::endl;
+  SequenceSVMTranslateSimilarityMatrix(test_window_vector, test_label_vector, train_window_vector, identity, filename);
+  std::cout << "OK" << std::endl;
+  filename = "../data/test/" + dataset + "/blosum62.txt";
+  std::cout << "Building " << filename << " ... " << std::endl;
+  SequenceSVMTranslateSimilarityMatrix(test_window_vector, test_label_vector, train_window_vector, blosum62, filename);
   std::cout << "OK" << std::endl;
 
   // delete sequence arrays

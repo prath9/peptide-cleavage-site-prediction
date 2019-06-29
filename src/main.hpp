@@ -17,4 +17,4 @@ std::vector<std::vector<int> > FileToMatrix(std::string filename);
 template <typename T, int rows, int cols> void printMatrix(T (&mat)[rows][cols]);
 void printMatrixSTL(std::vector<std::vector<int> > mat);
 // test functions
-void TestPSSM(Sequence*& train_sequences, int train_size, Sequence*& test_sequences, int test_size);
+void TestPSSM(Sequence*& train_sequences, int train_size, Sequence*& test_sequences, int test_size, double threshold);

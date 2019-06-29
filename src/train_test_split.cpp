@@ -7,9 +7,6 @@
 
 #include "train_test_split.hpp"
 
-std::string train_filename = "../data/train.red";
-std::string test_filename = "../data/test.red";
-
 // Return the number of lines minus one since the provided file's last line is empty
 int GetLineCount(std::string filename) {
   int line_count = 0;
@@ -50,7 +47,7 @@ void PrintArray(bool* array, int size) {
   std::cout << array[size - 1] << std::endl;
 }
 
-void CreateTrainTestSets(std::string filename) {
+void CreateTrainTestSets(std::string filename, std::string train_filename, std::string test_filename) {
   std::ifstream inputfile;
   inputfile.open(filename);
   // Create train and test files
