@@ -1,9 +1,31 @@
 # Peptide cleavage site prediction
 
+## Context
+
+Given a sequence of aminoacids, we want to predict the location of its cleavage site. This can be framed as a binary classification problem: given a location in the sequence, we use the surrounding aminoacids to predict whether or not the cleavage site is located there.
+
+For example, as in the image below, we may try to predict whether or not the cleavage site is located after the fifth aminoacid in the sequence, by looking at the ```p=3``` and ```q=4``` respectively preceding and following this position.
+
+![window.png](window.png)
+
+We are therefore looking for methods to score a window of ```p+q``` aminoacids around any candidate cleavage site. We implemented 2 such methods:
+
+* Using the training data to create a Position Specific Scoring Matrix (PSSM). This is an *ad hoc* method, and we explain how the PSSM is built below. 
+
+>Consider a window containing aminoacid *a* in position *i*, with *i* between *-p* and *q-1* (*cf* image above).
+>* if *a* appears in position *i* especially frequently in windows surrounding cleavage sites (compared with other windows), then this should **increase the score** of the window
+>* if *a* appears in position *i* especially seldom in windows surrounding cleavage sites (compared with other windows), then this should **decrease the score** of our window
+>Let *f(a,i)* be the frequency of aminoacid *a* at the relative position *i* in the training set, and *g(a)* the general frequency of *a* in the training set.
+>The PSSM matrix *W(a,i)* is defined by the equation: *W(a,i)* = log[*f(a,i)*] - log[*g(a)*]. Summing the *W(a,i)* for every aminoacid *a* in position *i* in the window defines the PSSM score of the window.
+
+* Using Support Vector Machines (SVM) and the C++ library ```libsvm```.
+
+
+
 ## Running
-* set the ```build_libsvm_datasets``` at the beginning of the ```src/main``` function to ```true```
-* run ```make``` and ```./main``` inside the ```src``` directory and ```make``` inside the ```libsvm-3.23``` directory
-* enter ```./main.sh``` in your terminal shell and follow the instructions there.
+* modify the first line of the function ```main()``` in ```src/main.cpp``` to chose the desired dataset.
+* run ```make``` and ```./main``` inside the ```src``` directory and ```make clean && make``` inside the ```libsvm-3.23``` directory
+* run ```./main.sh``` inside the ```src``` directory.
 
 ## Structure of our code
 
@@ -13,7 +35,7 @@ In this section, we describe how the raw data is transformed in order to be expl
 
 * The function ```CreateTrainTestSets``` in class ```train_test_split``` takes the original dataset (throughout the project, we worked with ```EUKSIG_13.red```) and builds two files ```train.red``` and ```test.red```, in respective proportions 4/5 and 1/5 using a random seed.
 
-* The class ```Sequence``` encodes a sequence of amino acids. Each instance has three attributes: the integers ```length``` and ```cleavage_site``` contain the number of amino acids in the sequence, and the position of the cleavage site. ```aa_sequence``` is a string containing the sequence of amino acids.
+* The class ```Sequence``` encodes a sequence of aminoacids. Each instance has three attributes: the integers ```length``` and ```cleavage_site``` contain the number of aminoacids in the sequence, and the position of the cleavage site. ```aa_sequence``` is a string containing the sequence of aminoacids.
 
 * ```FileToSequenceArray``` converts ```.red``` files (typically ```train.red``` and ```test.red```) into arrays of instances of ```Sequence```. As we shall see below, these arrays will be used directly for training in the case of the PSSM method, or converted into ```libsvm```-compatible files in the case of SVM.
 
@@ -51,7 +73,7 @@ The two following functions use the vectors created above to create ```libsvm```
 
 
 
-We wrote a bash script ```src/main.sh``` in order to facilitate training and prediction using ```libsvm```, making it easier to choose kernels and hyperparameters. Once you have run ```make``` and ```./main``` inside the ```src``` directory (with the ```build_libsvm_datasets``` flag set to true at the beginning of the ```main```, and ```make``` inside the ```libsvm-3.23``` directory, you can enter ```./main.sh``` in your terminal shell and follow the instructions there.
+We wrote a bash script ```src/main.sh``` in order to facilitate training and prediction using ```libsvm```, making it easier to choose kernels and hyperparameters. 
 
 ### Directories
 
