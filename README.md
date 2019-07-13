@@ -96,3 +96,7 @@ The directory ```data``` contains all our data. To be more precise:
 
 
 ```libsvm-3.23``` is where the ```libsvm``` functions are stored. We modified it slightly, exactly as advised [here](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/eval/index.html), in order to validate our model based on better evaluation functions than the accuracy.
+
+## Authors
+
+[Timothée Chauvin](http://timchauvin.com/) and [JS Denain](http://jsdenain.com/).
