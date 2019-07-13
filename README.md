@@ -15,6 +15,7 @@ We are therefore looking for methods to score a window of ```p+q``` aminoacids a
 >Consider a window containing aminoacid *a* in position *i*, with *i* between *-p* and *q-1* (*cf* image above).
 >* if *a* appears in position *i* especially frequently in windows surrounding cleavage sites (compared with other windows), then this should **increase the score** of the window
 >* if *a* appears in position *i* especially seldom in windows surrounding cleavage sites (compared with other windows), then this should **decrease the score** of our window
+
 >Let *f(a,i)* be the frequency of aminoacid *a* at the relative position *i* in the training set, and *g(a)* the general frequency of *a* in the training set.
 >The PSSM matrix *W(a,i)* is defined by the equation: *W(a,i)* = log[*f(a,i)*] - log[*g(a)*]. Summing the *W(a,i)* for every aminoacid *a* in position *i* in the window defines the PSSM score of the window.
 
